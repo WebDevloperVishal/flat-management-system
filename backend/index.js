@@ -1,15 +1,15 @@
 import express from "express";
-import dotenv from "dotnev";
+import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
 
-const PORT = 5000();
+const PORT= 5000;
 
-app.unsubscribe(express.json());
+app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send("Flat mangamemt Backend is running");
+    res.send("Flat management Backend is running");
 })
 
 app.listen(PORT, () => {
