@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Admin
+  User
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(User)
+  phoneNo  String @unique
+  address  String
+  pincode  String
+
+  flats Flat[] @relation("UserFlatsOwned")
+
+  purchasedFlats    Flat[]    @relation("UserFlatsBought")
+  enquiriesSent     Enquiry[] @relation("BuyerEnquiries")
+  enquiriesReceived Enquiry[] @relation("SellerEnquiries")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum FlatStatus {
+  pending
+  approved
+  rejected
+  sold
+}
+
+enum EnquiryStatus {
+  sent
+  received
+  read
+}
+
+model Flat {
+  id              Int        @id @default(autoincrement())
+  user_id         Int
+  title           String
+  address         String
+  price           Float
+  description     String?
+  images          Json? // store array of image URLs
+  amenities       Json? // store array of amenities like ["Gym","Parking"]
+  status          FlatStatus @default(pending)
+  sold_to_user_id Int? // optional buyer id if sold
+  sold_date       DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  owner     User      @relation("UserFlatsOwned", fields: [user_id], references: [id])
+  soldTo    User?     @relation("UserFlatsBought", fields: [sold_to_user_id], references: [id])
+  enquiries Enquiry[]
+
+  @@map("flats")
+}
+
+model Enquiry {
+  id         Int           @id @default(autoincrement())
+  flat_id    Int
+  buyer_id   Int
+  seller_id  Int
+  message    String
+  status     EnquiryStatus @default(sent)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+
+  flat   Flat @relation(fields: [flat_id], references: [id])
+  buyer  User @relation("BuyerEnquiries", fields: [buyer_id], references: [id])
+  seller User @relation("SellerEnquiries", fields: [seller_id], references: [id])
+
+  @@map("enquiries")
+}
